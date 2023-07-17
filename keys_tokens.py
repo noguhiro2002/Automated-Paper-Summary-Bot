@@ -1,0 +1,6 @@
+ENTREZ_EMAIL = "your_entrez_email"
+TEAMS_WEBHOOK = "your_teams_webhook"
+SLACK_WEBHOOK_URL = "your_slack_webhook_url"
+OPENAI_API_KEY = "your_openai_api_key"
+LINE_TOKEN = "your_line_token"
+LINE_CHANNEL_ID = "your_line_channel_id"

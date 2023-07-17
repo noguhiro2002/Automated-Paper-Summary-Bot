@@ -1,5 +1,5 @@
 
-![Overall](????????)
+![Overall](https://github.com/noguhiro2002/Automated-Paper-Summary-Bot/blob/main/readme/Picture_1.png?raw=true)
 
 ## English
 # Automated-Paper-Summary-Bot

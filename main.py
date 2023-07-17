@@ -13,7 +13,7 @@ from linebot.exceptions import LineBotApiError
 
 # Enter your keys and tokens in a separate file and import it
 # This can prevent accidental exposure of sensitive information
-# import keys_tokens
+import keys_tokens
 
 def pubmed_searchToGetIDs(termStr, datetypeStr, reldateStr):
   handle = Entrez.esearch(db="pubmed", term=termStr,  datetype=datetypeStr, reldate=reldateStr)

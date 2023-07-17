@@ -3,7 +3,7 @@ from Bio import Medline
 import os
 import openai
 import arxiv
-from datetime import datetime, timedelta
+import datetime
 import pymsteams
 import requests
 import json
@@ -13,7 +13,7 @@ from linebot.exceptions import LineBotApiError
 
 # Enter your keys and tokens in a separate file and import it
 # This can prevent accidental exposure of sensitive information
-import keys_tokens
+# import keys_tokens
 
 def pubmed_searchToGetIDs(termStr, datetypeStr, reldateStr):
   handle = Entrez.esearch(db="pubmed", term=termStr,  datetype=datetypeStr, reldate=reldateStr)
@@ -55,7 +55,7 @@ def pubmed_medline_multiPaperInfoGet(getPapers,pubmedRecord):
 def arxiv_multiPaperInfoGet(getPapers, termStr, arxivReldateStr):
   search_minus_Days=int(arxivReldateStr)
 
-  current_date = datetime.now()
+  current_date = datetime.datetime.now()
 
   minusDaysForSearch=[]
   minusDaysForSearch.append((current_date - timedelta(days=search_minus_Days)).strftime("%Y%m%d"))
@@ -87,7 +87,7 @@ def arxiv_multiPaperInfoGet(getPapers, termStr, arxivReldateStr):
   return(getPapers)
 
 
-def abstractGPTsummarize(getPapers, OPENAI_API_KEY, basePrompt, model):
+def abstractGPTsummarize(getPapers, OPENAI_API_KEY, basePrompt):
   openai.api_key = OPENAI_API_KEY
 
   for i, getpaper in enumerate(getPapers):
@@ -98,7 +98,7 @@ def abstractGPTsummarize(getPapers, OPENAI_API_KEY, basePrompt, model):
       renponse = openai.ChatCompletion.create(
         model=model,
         messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
+            {"role":"system", "content":"You are a helpful assistant."},
             {"role": "user", "content": messageForGPT}
         ],
         temperature=1,
@@ -114,6 +114,9 @@ def abstractGPTsummarize(getPapers, OPENAI_API_KEY, basePrompt, model):
 
   return(getPapers)
 
+def uploadDateTimeJST():
+  return( datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))) )
+
 def uploadToTeams(getPapers, teamsWebHook):
   myTeamsMessage = pymsteams.connectorcard(teamsWebHook)
 
@@ -121,13 +124,16 @@ def uploadToTeams(getPapers, teamsWebHook):
     AuthorsName=""
     mainBody=""
 
+    # Create upload AuthorsName
     for n, authorName in enumerate(paperInfo["Authors"]):
       if (n+1) != len(paperInfo["Authors"]):
         AuthorsName = AuthorsName + authorName + ", "
       else:
         AuthorsName = AuthorsName + authorName
 
-    mainBody = "**[{0}]({1})** <br> {2} <br> *{3}* <br> <br> **要約:** {4} <br> <br> **Abstract:** {5}".format(paperInfo["Title"], paperInfo["paperLink"], AuthorsName, paperInfo["Source"], paperInfo["SummaryAbstract"], paperInfo["Abstract"])
+    uploadDateTimeAndNum = uploadDateTimeJST().strftime('%Y/%m/%d %H:%M') + " | " + "{0}/{1}".format(str(i+1), str(len(getPapers)))
+
+    mainBody = "**{0}** <br><br> **[{1}]({2})** <br> {3} <br> *{4}* <br> <br> **要約:** <br> {5} <br> <br> **Abstract:** <br> {6} <br> <br>".format(uploadDateTimeAndNum, paperInfo["Title"], paperInfo["paperLink"], AuthorsName, paperInfo["Source"], paperInfo["SummaryAbstract"], paperInfo["Abstract"])
     myTeamsMessage.text(mainBody)
     myTeamsMessage.send()
   
@@ -143,7 +149,9 @@ def uploadToLINE(getPapers, LINE_token, LINE_channelID):
       else:
         AuthorsName = AuthorsName + authorName
 
-    mainBoey = "{0}\n{1}\n{2}\n{3}\n{4}".format(paperInfo["Title"], paperInfo["paperLink"], AuthorsName, paperInfo["Source"], paperInfo["SummaryAbstract"])
+    uploadDateTimeAndNum = uploadDateTimeJST().strftime('%Y/%m/%d %H:%M') + " | " + "{0}/{1}".format(str(i+1), str(len(getPapers)))
+
+    mainBoey = "{0}\n\n{1}\n{2}\n{3}\n{4}\n{5}".format(uploadDateTimeAndNum, paperInfo["Title"], paperInfo["paperLink"], AuthorsName, paperInfo["Source"], paperInfo["SummaryAbstract"])
     try:
         line_bot_api.push_message(LINE_channelID, TextSendMessage(text=mainBoey, title=paperInfo["Title"]))
     except LineBotApiError as e:
@@ -160,12 +168,13 @@ def uploadToSlack(getPapers, SlackWebHookURL):
       else:
         AuthorsName = AuthorsName + authorName
 
-    # linkUrl="https://pubmed.ncbi.nlm.nih.gov/" + paperInfo["PMID"] + "/"
-    message = "<{1}|*{0}*>\n {2}\n _{3}_\n\n *要約:*\n {4}\n\n *Abstract:*\n{5}".format(paperInfo["Title"], paperInfo["paperLink"], AuthorsName, paperInfo["Source"], paperInfo["SummaryAbstract"], paperInfo["Abstract"])
+    uploadDateTimeAndNum = uploadDateTimeJST().strftime('%Y/%m/%d %H:%M') + " | " + "{0}/{1}".format(str(i+1), str(len(getPapers)))
+    message = "*{0}*\n\n <{2}|*{1}*>\n {3}\n _{4}_\n\n *要約:*\n {5}\n\n *Abstract:*\n{6}".format(uploadDateTimeAndNum, paperInfo["Title"], paperInfo["paperLink"], AuthorsName, paperInfo["Source"], paperInfo["SummaryAbstract"], paperInfo["Abstract"])
 
     requests.post(SlackWebHookURL, data=json.dumps({
         "text": message,
     }))
+
 
 def main():
   Entrez.email = keys_tokens.ENTREZ_EMAIL

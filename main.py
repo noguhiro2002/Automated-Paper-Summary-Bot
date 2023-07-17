@@ -87,7 +87,7 @@ def arxiv_multiPaperInfoGet(getPapers, termStr, arxivReldateStr):
   return(getPapers)
 
 
-def abstractGPTsummarize(getPapers, OPENAI_API_KEY, basePrompt):
+def abstractGPTsummarize(getPapers, OPENAI_API_KEY, basePrompt, model):
   openai.api_key = OPENAI_API_KEY
 
   for i, getpaper in enumerate(getPapers):
@@ -98,7 +98,7 @@ def abstractGPTsummarize(getPapers, OPENAI_API_KEY, basePrompt):
       renponse = openai.ChatCompletion.create(
         model=model,
         messages=[
-            {"role":"system", "content":"You are a helpful assistant."},
+            {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": messageForGPT}
         ],
         temperature=1,
@@ -164,7 +164,7 @@ def uploadToSlack(getPapers, SlackWebHookURL):
     message = "<{1}|*{0}*>\n {2}\n _{3}_\n\n *要約:*\n {4}\n\n *Abstract:*\n{5}".format(paperInfo["Title"], paperInfo["paperLink"], AuthorsName, paperInfo["Source"], paperInfo["SummaryAbstract"], paperInfo["Abstract"])
 
     requests.post(SlackWebHookURL, data=json.dumps({
-        "text" : message,
+        "text": message,
     }))
 
 def main():
@@ -178,7 +178,7 @@ def main():
   termStr = "lab automation"
   datetypeStr = "edat" #'mdat' (modification date), 'pdat' (publication date) and 'edat' (Entrez date)
   reldateStr = "1" # The search range will be set from today back to N days. The minimum value is 1.
-  arxivReldateStr = "2" # The search range will be set from today back to N days. The database update is slow, so the minimum value is 3. 
+  arxivReldateStr = "3" # The search range will be set from today back to N days. The database update is slow, so the minimum value is 3. 
 
   getPapers=[]
   # to get papers from pubmed
@@ -192,13 +192,12 @@ def main():
   # summarize the abstract using GPT model
   basePrompt = "以下は英語学術論文のアブストラクトです。本論文の主張を、端的に日本語で、100-200文字で示していただけますか? なお、日本語的に不可解な単語は無理に訳さずに英語のまま表現してください。"
   model = "gpt-3.5-turbo"
-  papers = abstractGPTsummarize(papers, OPENAI_API_KEY, basePrompt)
+  papers = abstractGPTsummarize(papers, OPENAI_API_KEY, basePrompt, model)
 
   # upload the paper info to Teams
   uploadToTeams(papers, teamsWebHook)
 
-  # send notification to LINE
-  notification_message = "Summary has been uploaded to Teams."
+  # send message to LINE
   uploadToLINE(papers, LINE_token, LINE_channelID)
 
   # upload the paper info to Slack

@@ -58,8 +58,8 @@ def arxiv_multiPaperInfoGet(getPapers, termStr, arxivReldateStr):
   current_date = datetime.datetime.now()
 
   minusDaysForSearch=[]
-  minusDaysForSearch.append((current_date - timedelta(days=search_minus_Days)).strftime("%Y%m%d"))
-  minusDaysForSearch.append((current_date - timedelta(days=search_minus_Days-1)).strftime("%Y%m%d"))
+  minusDaysForSearch.append((current_date - datetime.timedelta(days=search_minus_Days)).strftime("%Y%m%d"))
+  minusDaysForSearch.append((current_date - datetime.timedelta(days=search_minus_Days-1)).strftime("%Y%m%d"))
 
   search = arxiv.Search(
     query = termStr + " AND submittedDate:[{0} TO {1}]".format(minusDaysForSearch[0], minusDaysForSearch[1]),
@@ -87,7 +87,7 @@ def arxiv_multiPaperInfoGet(getPapers, termStr, arxivReldateStr):
   return(getPapers)
 
 
-def abstractGPTsummarize(getPapers, OPENAI_API_KEY, basePrompt):
+def abstractGPTsummarize(getPapers, OPENAI_API_KEY, basePrompt, model):
   openai.api_key = OPENAI_API_KEY
 
   for i, getpaper in enumerate(getPapers):

@@ -10,24 +10,26 @@ import json
 from linebot import LineBotApi
 from linebot.models import TextSendMessage
 from linebot.exceptions import LineBotApiError
+from discordwebhook import Discord
 
 # Enter your keys and tokens in a separate file and import it
 # This can prevent accidental exposure of sensitive information
 import keys_tokens
 
-def pubmed_searchToGetIDs(termStr, datetypeStr, reldateStr):
+def pubmed_searchToGetIDs(termStr, datetypeStr, reldateStr, ENTREZ_EMAIL):
+  Entrez.email = ENTREZ_EMAIL
   handle = Entrez.esearch(db="pubmed", term=termStr,  datetype=datetypeStr, reldate=reldateStr)
   record = Entrez.read(handle)
   return(record)
 
-def pubmed_medline_multiPaperInfoGet(getPapers,pubmedRecord):
+def pubmed_medline_multiPaperInfoGet(getPapers,pubmedRecord, ENTREZ_EMAIL):
+  Entrez.email = ENTREZ_EMAIL
   record=pubmedRecord
   # getPapers=[]
   records=[]
   for ID in record["IdList"]:
-      handle = Entrez.efetch(db="pubmed", id=ID, rettype="medline",retmode="text")
+      handle = Entrez.efetch(db="pubmed", id=ID, rettype="medline", retmode="text")
       records = Medline.parse(handle)
-      # print(records)
       records = list(records)
 
       try:
@@ -172,45 +174,67 @@ def uploadToSlack(getPapers, SlackWebHookURL):
     message = "*{0}*\n\n <{2}|*{1}*>\n {3}\n _{4}_\n\n *要約:*\n {5}\n\n *Abstract:*\n{6}".format(uploadDateTimeAndNum, paperInfo["Title"], paperInfo["paperLink"], AuthorsName, paperInfo["Source"], paperInfo["SummaryAbstract"], paperInfo["Abstract"])
 
     requests.post(SlackWebHookURL, data=json.dumps({
-        "text": message,
+        "text" : message,
     }))
 
+def uploadToDiscord(getPapers, DISCORD_WEBHOOK_URL):
+  for i, paperInfo in enumerate(getPapers):
+    AuthorsName=""
+    message=""
+    for n, authorName in enumerate(paperInfo["Authors"]):
+      if (n+1) != len(paperInfo["Authors"]):
+        AuthorsName = AuthorsName + authorName + ", "
+      else:
+        AuthorsName = AuthorsName + authorName
 
-def main():
-  Entrez.email = keys_tokens.ENTREZ_EMAIL
+    uploadDateTimeAndNum = uploadDateTimeJST().strftime('%Y/%m/%d %H:%M') + " | " + "{0}/{1}".format(str(i+1), str(len(getPapers)))
+    # message = "**{0}**\r\r**{1}**\r{2}\r{3}\r_{4}_\r\r**要約:**\r{5}\r\r**Abstract:**\r{6}".format(uploadDateTimeAndNum, paperInfo["Title"], paperInfo["paperLink"], AuthorsName, paperInfo["Source"], paperInfo["SummaryAbstract"], paperInfo["Abstract"])
+    message = "**{0}**\r\r**{1}**\r{2}\r{3}\r_{4}_\r\r要約:\r{5}".format(uploadDateTimeAndNum, paperInfo["Title"], paperInfo["paperLink"], AuthorsName, paperInfo["Source"], paperInfo["SummaryAbstract"])
+
+    discord = Discord(url=DISCORD_WEBHOOK_URL)
+    discord.post(content = message,
+                 username="Postman") #you can change your username to post.
+
+def main(data, context):
+  ENTREZ_EMAIL = keys_tokens.ENTREZ_EMAIL
   teamsWebHook = keys_tokens.TEAMS_WEBHOOK
   SlackWebHookURL = keys_tokens.SLACK_WEBHOOK_URL
   OPENAI_API_KEY = keys_tokens.OPENAI_API_KEY
   LINE_token = keys_tokens.LINE_TOKEN
   LINE_channelID = keys_tokens.LINE_CHANNEL_ID
+  DISCORD_WEBHOOK_URL = keys_tokens.DISCORD_WEBHOOK_URL
 
-  termStr = "lab automation"
+  termStr = "lab automation" # type your search term. ex) lab automation
   datetypeStr = "edat" #'mdat' (modification date), 'pdat' (publication date) and 'edat' (Entrez date)
   reldateStr = "1" # The search range will be set from today back to N days. The minimum value is 1.
   arxivReldateStr = "3" # The search range will be set from today back to N days. The database update is slow, so the minimum value is 3. 
 
   getPapers=[]
   # to get papers from pubmed
-  pubmed_record = pubmed_searchToGetIDs(termStr, datetypeStr, reldateStr)
-  papers = pubmed_medline_multiPaperInfoGet(getPapers, pubmed_record)
+  pubmed_record = pubmed_searchToGetIDs(termStr, datetypeStr, reldateStr, ENTREZ_EMAIL)
+  papers = pubmed_medline_multiPaperInfoGet(getPapers, pubmed_record, ENTREZ_EMAIL)
 
   # to get papers from arxiv
   arxiv_termStr=termStr
   papers = arxiv_multiPaperInfoGet(papers, arxiv_termStr, arxivReldateStr)
 
   # summarize the abstract using GPT model
-  basePrompt = "以下は英語学術論文のアブストラクトです。本論文の主張を、端的に日本語で、100-200文字で示していただけますか? なお、日本語的に不可解な単語は無理に訳さずに英語のまま表現してください。"
-  model = "gpt-3.5-turbo"
+  basePrompt = "以下は英語学術論文のアブストラクトです。本論文の主張を、端的に日本語で、100-200文字で示していただけますか? なお、日本語的に不可解な単語は無理に訳さずに英語のまま表現してください。" #type your prompt. Of course, you can change your language.
+  model = "gpt-3.5-turbo" # select your OpenAI model
   papers = abstractGPTsummarize(papers, OPENAI_API_KEY, basePrompt, model)
 
-  # upload the paper info to Teams
+  # # upload the paper info to Teams
   uploadToTeams(papers, teamsWebHook)
 
-  # send message to LINE
+  # # send notification to LINE
   uploadToLINE(papers, LINE_token, LINE_channelID)
 
-  # upload the paper info to Slack
+  # # upload the paper info to Slack
   uploadToSlack(papers, SlackWebHookURL)
+
+  # upload the paper info to Discord
+  uploadToDiscord(papers, DISCORD_WEBHOOK_URL)
+
 
 if __name__ == "__main__":
   main()

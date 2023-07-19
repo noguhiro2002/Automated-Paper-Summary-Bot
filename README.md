@@ -4,14 +4,14 @@
 ## English
 # Automated-Paper-Summary-Bot
 
-This Python script uses the Bio.Entrez library, OpenAI's GPT-3.5-turbo model, and the ArXiv API to automatically search and retrieve academic papers from PubMed and ArXiv, generate summaries of their abstracts, and share these summaries along with paper details to Microsoft Teams, Slack, and LINE.
+This Python script uses the Bio.Entrez library, OpenAI's GPT-3.5-turbo model, and the ArXiv API to automatically search and retrieve academic papers from PubMed and ArXiv, generate summaries of their abstracts, and share these summaries along with paper details to Microsoft Teams, Slack, LINE and Discord.
 
 
 ## Features
 - Automatically searches for academic papers from PubMed and ArXiv based on specific search terms.
 - Summarizes these papers' abstracts using the OpenAI GPT-3.5-turbo model (default).
 - Shares the summarized abstracts along with paper details (title, authors, source, abstract, link, etc.) on Microsoft Teams, Slack, and LINE.
-- If any paper source (Pubmed, ArXiv) or sharing destination (Teams, Slack, LINE) is not necessary, please comment them out to deal with them.
+- If any paper source (Pubmed, ArXiv) or sharing destination (Teams, Slack, LINE, Discord) is not necessary, please comment them out to deal with them.
 
 ## How to Use
 1. Download or clone this repository.
@@ -26,16 +26,17 @@ This Python script uses the Bio.Entrez library, OpenAI's GPT-3.5-turbo model, an
 - pymsteams
 - line-bot-sdk
 - requests
+- discordwebhook
 
 ## Japanese
 # 自動論文要約ボット
-このPythonスクリプトは、Bio.Entrezライブラリ、OpenAIのGPT-3.5-turboモデル(など)、そしてArXiv APIを利用して、PubMedとArXivから自動的に学術論文を検索・取得し、それらのアブストラクトの要約を生成し、その要約と論文の詳細をMicrosoft Teams、Slack、そしてLINEに共有します。
+このPythonスクリプトは、Bio.Entrezライブラリ、OpenAIのGPT-3.5-turboモデル(など)、そしてArXiv APIを利用して、PubMedとArXivから自動的に学術論文を検索・取得し、それらのアブストラクトの要約を生成し、その要約と論文の詳細をMicrosoft Teams、Slack、LINE、そしてDiscordに共有します。
 
 ## 機能
 - 特定の検索語に基づいてPubMedとArXivから学術論文を自動検索します。
 - これらの論文のアブストラクトをOpenAIのGPT-3.5-turboモデル(既定)を使って要約します。
-- 要約したアブストラクトと共に論文の詳細（タイトル、著者、ソース、アブストラクト、リンクなど）をMicrosoft Teams、Slack、そしてLINEに共有します。
-- 論文ソース元(Pubmed, ArXiv)および共有先(Teams, Slack, LINE)で不要なものはコメントアウトして対応してください。
+- 要約したアブストラクトと共に論文の詳細（タイトル、著者、ソース、アブストラクト、リンクなど）をMicrosoft Teams、Slack、LINE、そしてDiscordに共有します。
+- 論文ソース元(Pubmed, ArXiv)および共有先(Teams, Slack, LINE, Discord)で不要なものはコメントアウトして対応してください。
 
 
 ## 使い方
@@ -52,3 +53,4 @@ This Python script uses the Bio.Entrez library, OpenAI's GPT-3.5-turbo model, an
 - pymsteams
 - line-bot-sdk
 - requests
+- discordwebhook

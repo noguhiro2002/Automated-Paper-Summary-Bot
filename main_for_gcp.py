@@ -1,5 +1,6 @@
 from Bio import Entrez
 from Bio import Medline
+import functions_framework
 import os
 import openai
 import arxiv
@@ -17,6 +18,8 @@ from discordwebhook import Discord
 # This can prevent accidental exposure of sensitive information
 import keys_tokens
 
+@functions_framework.http
+
 def pubmed_searchToGetIDs(termStr, datetypeStr, reldateStr, ENTREZ_EMAIL):
   Entrez.email = ENTREZ_EMAIL
   handle = Entrez.esearch(db="pubmed", term=termStr,  datetype=datetypeStr, reldate=reldateStr)
@@ -32,6 +35,8 @@ def pubmed_medline_multiPaperInfoGet(getPapers,pubmedRecord, ENTREZ_EMAIL):
       handle = Entrez.efetch(db="pubmed", id=ID, rettype="medline", retmode="text")
       records = Medline.parse(handle)
       records = list(records)
+
+      # pprint.pprint(records)
 
       try:
           getPapers.append({
@@ -128,6 +133,7 @@ def bioRxiv_multiPaperInfoGet(getPapers, termStr, bioArxivReldateStr):
 
   # Define your keywords here
   keywords = termStr.lower().split(" ")
+  print(keywords)
 
   # Fetch data from both URLs
   data_day1 = bioRxiv_fetch_data(url1)
@@ -217,7 +223,6 @@ def chemRxiv_multiPaperInfoGet(getPapers, chemRxivtermStr, chemRxivReldateStr):
   return(getPapers)
 
 
-
 def abstractGPTsummarize(getPapers, OPENAI_API_KEY, basePrompt, model):
   openai.api_key = OPENAI_API_KEY
 
@@ -271,6 +276,7 @@ def uploadToTeams(getPapers, teamsWebHook):
     uploadDateTimeAndNum = uploadDateTimeJST().strftime('%Y/%m/%d %H:%M') + " | " + paperInfo["Source"] + " | " + "{0}/{1}".format(str(i+1), str(len(getPapers)))
 
     message = "**{0}** <br> **[{1}]({2})** <br> {3} <br><br> {4} <br><br> {5}".format(uploadDateTimeAndNum, paperInfo["Title"], paperInfo["paperLink"], AuthorsName, paperInfo["SummaryAbstract"], "")
+
     myTeamsMessage.text(message)
     myTeamsMessage.send()
   
@@ -282,6 +288,7 @@ def uploadToLINE(getPapers, LINE_token, LINE_channelID):
     uploadDateTimeAndNum = uploadDateTimeJST().strftime('%Y/%m/%d %H:%M') + " | " + paperInfo["Source"] + " | " + "{0}/{1}".format(str(i+1), str(len(getPapers)))
 
     message = "{0}\n{1}\n{2}\n{3}\n\n{4}".format(uploadDateTimeAndNum, paperInfo["Title"], paperInfo["paperLink"], AuthorsName, paperInfo["SummaryAbstract"])
+
     try:
         line_bot_api.push_message(LINE_channelID, TextSendMessage(text=message, title=paperInfo["Title"]))
     except LineBotApiError as e:
@@ -295,6 +302,7 @@ def uploadToSlack(getPapers, SlackWebHookURL):
     uploadDateTimeAndNum = uploadDateTimeJST().strftime('%Y/%m/%d %H:%M') + " | " + paperInfo["Source"] + " | " + "{0}/{1}".format(str(i+1), str(len(getPapers)))
 
     message = "*{0}*\n\n <{2}|*{1}*>\n {3} \n\n {4}".format(uploadDateTimeAndNum, paperInfo["Title"], paperInfo["paperLink"], AuthorsName, paperInfo["SummaryAbstract"])
+
     requests.post(SlackWebHookURL, data=json.dumps({
         "text" : message,
     }))
@@ -374,4 +382,4 @@ def main(request):
 
 
 if __name__ == "__main__":
-  main("hello world")
+  main()

@@ -3,7 +3,7 @@
 
 ## English
 # Automated Paper Search/Summarize Bot
-This Python script utilizes the Bio.Entrez library, OpenAI's GPT-4-turbo model, and the ArXiv API to automatically search and retrieve academic papers from PubMed, BioRxiv, ChemRxiv, and ArXiv. It generates about ten representative keywords from their abstracts and shares these keywords along with the paper details (title with link, authors, source, link, etc.) to Microsoft Teams, Slack, LINE, and Discord.
+This Python script utilizes the Bio.Entrez library, OpenAI's GPT-4o mini model, and the ArXiv API to automatically search and retrieve academic papers from PubMed, BioRxiv, ChemRxiv, and ArXiv. It generates about ten representative keywords from their abstracts and shares these keywords along with the paper details (title with link, authors, source, link, etc.) to Microsoft Teams, Slack, LINE, and Discord.
 
 ## Features
 - Automatically searches for academic papers from PubMed, BioRxiv, ChemRxiv, and ArXiv based on specific search terms.
@@ -32,7 +32,7 @@ This Python script utilizes the Bio.Entrez library, OpenAI's GPT-4-turbo model, 
 
 ## Japanese
 # 自動論文検索/要約ボット
-このPythonスクリプトは、Bio.Entrezライブラリ、OpenAIのGPT-4-turboモデル(など)、そしてPubMed/BioRxiv/ChemRxiv/ArXivのAPIを用いて、自動的に学術論文を検索・取得し、それらのアブストラクトから論文を象徴する単語を10個ほど生成し、それと論文の詳細をMicrosoft Teams、Slack、LINE、そしてDiscordに共有します。
+このPythonスクリプトは、Bio.Entrezライブラリ、OpenAIのGPT-4o mini モデル(など)、そしてPubMed/BioRxiv/ChemRxiv/ArXivのAPIを用いて、自動的に学術論文を検索・取得し、それらのアブストラクトから論文を象徴する単語を10個ほど生成し、それと論文の詳細をMicrosoft Teams、Slack、LINE、そしてDiscordに共有します。
 
 ## 機能
 - 特定の検索語に基づいてPubMed/BioRxiv/ChemRxiv/ArXivから、特定のキーワードに関連する学術論文を自動検索します。
